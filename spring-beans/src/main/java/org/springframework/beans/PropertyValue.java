@@ -39,12 +39,16 @@ import org.springframework.util.ObjectUtils;
  * @see PropertyValues
  * @see BeanWrapper
  */
+/*
+* 用于封装属性名和属性值的容器
+* */
 @SuppressWarnings("serial")
 public class PropertyValue extends BeanMetadataAttributeAccessor implements Serializable {
 
 	private final String name;
 
 	@Nullable
+	// 获取属性值的对象
 	private final Object value;
 
 	private boolean optional = false;

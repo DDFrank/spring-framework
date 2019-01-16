@@ -36,6 +36,10 @@ import org.springframework.util.Assert;
  * @see BeansDtdResolver
  * @see PluggableSchemaResolver
  */
+/*
+* 代理 dtd 的 BeansDtdResolver
+* 代理 xml schemas 的 PluggableSchemaResolver
+* */
 public class DelegatingEntityResolver implements EntityResolver {
 
 	/** Suffix for DTD files. */
@@ -81,6 +85,7 @@ public class DelegatingEntityResolver implements EntityResolver {
 	@Nullable
 	public InputSource resolveEntity(String publicId, @Nullable String systemId) throws SAXException, IOException {
 		if (systemId != null) {
+			// 根据结尾文件的命名来调用不同的解析器，返回不同的结果
 			if (systemId.endsWith(DTD_SUFFIX)) {
 				return this.dtdResolver.resolveEntity(publicId, systemId);
 			}

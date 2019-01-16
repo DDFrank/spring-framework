@@ -37,6 +37,17 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.beans.factory.support.RootBeanDefinition
  * @see org.springframework.beans.factory.support.ChildBeanDefinition
  */
+/*
+* 该接口描述了一个Bean 实例的定义，包括属性值，构造方法值和继承自它的类的更多信息
+*
+* 属性和方法基本都能跟 bean 标签的属性对应上
+* */
+/*
+* 常用的实现类
+* - org.springframework.beans.factory.support.ChildBeanDefinition 如果配置文件定义了 父 <bean> 和 子 <bean>, 则 子bean用这个
+* - org.springframework.beans.factory.support.RootBeanDefinition 如果配置文件定义了 父 <bean> 和 子 <bean>, 则 父bean用这个
+* - org.springframework.beans.factory.support.GenericBeanDefinition 一站式服务
+* */
 public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 
 	/**
@@ -232,6 +243,9 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * <p>The returned instance can be modified during bean factory post-processing.
 	 * @return the MutablePropertyValues object (never {@code null})
 	 */
+	/*
+	* 可变的属性集合
+	* */
 	MutablePropertyValues getPropertyValues();
 
 	/**

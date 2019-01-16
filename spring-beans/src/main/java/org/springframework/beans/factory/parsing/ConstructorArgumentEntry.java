@@ -26,8 +26,11 @@ import org.springframework.util.Assert;
  * @author Juergen Hoeller
  * @since 2.0
  */
+/*
+* 代表构造器元素的 Entry
+* */
 public class ConstructorArgumentEntry implements ParseState.Entry {
-
+	// 参数的顺序 0开始
 	private final int index;
 
 
@@ -35,6 +38,7 @@ public class ConstructorArgumentEntry implements ParseState.Entry {
 	 * Creates a new instance of the {@link ConstructorArgumentEntry} class
 	 * representing a constructor argument with a (currently) unknown index.
 	 */
+	// 说明不知道参数的顺序
 	public ConstructorArgumentEntry() {
 		this.index = -1;
 	}

@@ -28,10 +28,13 @@ import org.springframework.util.Assert;
  * @see BeanDefinition#getPropertyValues()
  * @see org.springframework.beans.factory.BeanFactory#getBean
  */
+/*
+* 不可变的容器，用于放置某个指向其它 bean 的属性值, 在运行时得到解析
+* */
 public class RuntimeBeanReference implements BeanReference {
-
+	// bean 的名字
 	private final String beanName;
-
+	// 是否有父类工厂
 	private final boolean toParent;
 
 	@Nullable

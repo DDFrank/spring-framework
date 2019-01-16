@@ -55,6 +55,9 @@ import org.springframework.util.StringUtils;
  * @see ChildBeanDefinition
  */
 @SuppressWarnings("serial")
+/*
+* 封装各种 bean 的属性
+* */
 public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccessor
 		implements BeanDefinition, Cloneable {
 
@@ -138,6 +141,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 
 
 	@Nullable
+	// bean对应的class
 	private volatile Object beanClass;
 
 	@Nullable

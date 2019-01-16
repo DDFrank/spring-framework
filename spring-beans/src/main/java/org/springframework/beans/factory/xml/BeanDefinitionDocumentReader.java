@@ -34,6 +34,9 @@ import org.springframework.beans.factory.BeanDefinitionStoreException;
  * @since 18.12.2003
  * @see XmlBeanDefinitionReader#setDocumentReaderClass
  */
+/*
+* 目前就一个实现类 Default...
+* */
 public interface BeanDefinitionDocumentReader {
 
 	/**
@@ -44,6 +47,10 @@ public interface BeanDefinitionDocumentReader {
 	 * (includes the target registry and the resource being parsed)
 	 * @throws BeanDefinitionStoreException in case of parsing errors
 	 */
+	/*
+	 * 从给定的 Document 对象中解析定义的 BeanDefinition 并将他们注册到注册表中
+	 *
+	 * */
 	void registerBeanDefinitions(Document doc, XmlReaderContext readerContext)
 			throws BeanDefinitionStoreException;
 

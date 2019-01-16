@@ -29,6 +29,9 @@ import org.springframework.util.Assert;
  * @since 2.5
  * @see org.springframework.beans.factory.annotation.Qualifier
  */
+/*
+* 注入时的候选者的 type 名的封装,每个 qualifier 对应一个
+* */
 @SuppressWarnings("serial")
 public class AutowireCandidateQualifier extends BeanMetadataAttributeAccessor {
 

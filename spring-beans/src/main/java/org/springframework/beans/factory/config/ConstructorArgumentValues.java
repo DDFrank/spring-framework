@@ -41,6 +41,9 @@ import org.springframework.util.ObjectUtils;
  * @since 09.11.2003
  * @see BeanDefinition#getConstructorArgumentValues
  */
+/*
+* beanDefinition 的一部分，封装了构造器相关的属性
+* */
 public class ConstructorArgumentValues {
 
 	private final Map<Integer, ValueHolder> indexedArgumentValues = new LinkedHashMap<>();
@@ -433,15 +436,21 @@ public class ConstructorArgumentValues {
 	 * Holder for a constructor argument value, with an optional type
 	 * attribute indicating the target type of the actual constructor argument.
 	 */
+	/*
+	* 封装了 构造器的参数的属性
+	* */
 	public static class ValueHolder implements BeanMetadataElement {
 
 		@Nullable
+		// 参数的值
 		private Object value;
 
 		@Nullable
+		// 参数类型
 		private String type;
 
 		@Nullable
+		// 参数名字
 		private String name;
 
 		@Nullable

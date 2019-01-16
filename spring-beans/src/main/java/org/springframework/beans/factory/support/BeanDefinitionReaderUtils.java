@@ -54,13 +54,18 @@ public abstract class BeanDefinitionReaderUtils {
 	 * @return the bean definition
 	 * @throws ClassNotFoundException if the bean class could not be loaded
 	 */
+	/*
+	* 创建 AbstractBeanDefinition
+	* */
 	public static AbstractBeanDefinition createBeanDefinition(
 			@Nullable String parentName, @Nullable String className, @Nullable ClassLoader classLoader) throws ClassNotFoundException {
-
+		// 一站式服务对象
 		GenericBeanDefinition bd = new GenericBeanDefinition();
+		// 设置父类的名字
 		bd.setParentName(parentName);
 		if (className != null) {
 			if (classLoader != null) {
+				// 设置 beanClass
 				bd.setBeanClass(ClassUtils.forName(className, classLoader));
 			}
 			else {
@@ -157,6 +162,9 @@ public abstract class BeanDefinitionReaderUtils {
 	 * @param registry the bean factory to register with
 	 * @throws BeanDefinitionStoreException if registration failed
 	 */
+	/*
+	* 注册解析好的
+	* */
 	public static void registerBeanDefinition(
 			BeanDefinitionHolder definitionHolder, BeanDefinitionRegistry registry)
 			throws BeanDefinitionStoreException {

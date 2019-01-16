@@ -31,12 +31,17 @@ import org.springframework.util.ObjectUtils;
  * @author Juergen Hoeller
  * @since 1.1
  */
+/*
+* 用于 lookup-method 的数据类
+* */
 public class LookupOverride extends MethodOverride {
 
 	@Nullable
+	// 实际返回值的 bean
 	private final String beanName;
 
 	@Nullable
+	// 注入的方法名字
 	private Method method;
 
 

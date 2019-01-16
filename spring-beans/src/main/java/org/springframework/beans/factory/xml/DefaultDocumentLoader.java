@@ -45,6 +45,9 @@ import org.springframework.util.xml.XmlValidationModeDetector;
  * @author Juergen Hoeller
  * @since 2.0
  */
+/*
+*
+* */
 public class DefaultDocumentLoader implements DocumentLoader {
 
 	/**
@@ -68,12 +71,14 @@ public class DefaultDocumentLoader implements DocumentLoader {
 	@Override
 	public Document loadDocument(InputSource inputSource, EntityResolver entityResolver,
 			ErrorHandler errorHandler, int validationMode, boolean namespaceAware) throws Exception {
-
+		// 利用 验证模式和命名空间来创建工厂
 		DocumentBuilderFactory factory = createDocumentBuilderFactory(validationMode, namespaceAware);
 		if (logger.isTraceEnabled()) {
 			logger.trace("Using JAXP provider [" + factory.getClass().getName() + "]");
 		}
+		// 创建 DocumentBuilder
 		DocumentBuilder builder = createDocumentBuilder(factory, entityResolver, errorHandler);
+		// 解析 XML 获取Document
 		return builder.parse(inputSource);
 	}
 
@@ -89,6 +94,7 @@ public class DefaultDocumentLoader implements DocumentLoader {
 			throws ParserConfigurationException {
 
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		// 设置命名空间和验证模式
 		factory.setNamespaceAware(namespaceAware);
 
 		if (validationMode != XmlValidationModeDetector.VALIDATION_NONE) {

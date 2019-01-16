@@ -24,6 +24,9 @@ import org.springframework.util.StringUtils;
  * @author Rob Harrop
  * @since 2.0
  */
+/*
+* Java 属性的 entry
+* */
 public class PropertyEntry implements ParseState.Entry {
 
 	private final String name;

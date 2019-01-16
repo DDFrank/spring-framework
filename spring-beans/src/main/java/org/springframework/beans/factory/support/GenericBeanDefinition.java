@@ -39,6 +39,7 @@ import org.springframework.lang.Nullable;
 @SuppressWarnings("serial")
 public class GenericBeanDefinition extends AbstractBeanDefinition {
 
+	// 父类的名字
 	@Nullable
 	private String parentName;
 
