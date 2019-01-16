@@ -46,12 +46,16 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	/** Map from alias to canonical name. */
 	private final Map<String, String> aliasMap = new ConcurrentHashMap<>(16);
 
-
+	/*
+	 * 注册一个 beanName 和 alias 的关系
+	 * */
 	@Override
 	public void registerAlias(String name, String alias) {
 		Assert.hasText(name, "'name' must not be empty");
 		Assert.hasText(alias, "'alias' must not be empty");
+		// 需要同步
 		synchronized (this.aliasMap) {
+			// 假如 beanName 和 alias 相同，那么就删掉这个 alias
 			if (alias.equals(name)) {
 				this.aliasMap.remove(alias);
 				if (logger.isDebugEnabled()) {
@@ -59,12 +63,15 @@ public class SimpleAliasRegistry implements AliasRegistry {
 				}
 			}
 			else {
+				// 获取 alias 已注册的 beanName
 				String registeredName = this.aliasMap.get(alias);
 				if (registeredName != null) {
+					// 相同，就返回，不用注册了
 					if (registeredName.equals(name)) {
 						// An existing alias - no need to re-register
 						return;
 					}
+					// 不同也不允许覆盖，就异常
 					if (!allowAliasOverriding()) {
 						throw new IllegalStateException("Cannot define alias '" + alias + "' for name '" +
 								name + "': It is already registered for name '" + registeredName + "'.");
@@ -74,7 +81,9 @@ public class SimpleAliasRegistry implements AliasRegistry {
 								registeredName + "' with new target name '" + name + "'");
 					}
 				}
+				// 校验是否存在循环指向
 				checkForAliasCircle(name, alias);
+				// 注册 alias, 一一对应的关系
 				this.aliasMap.put(alias, name);
 				if (logger.isTraceEnabled()) {
 					logger.trace("Alias definition '" + alias + "' registered for name '" + name + "'");
@@ -97,11 +106,16 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	 * @param alias the alias to look for
 	 * @since 4.2.1
 	 */
+	/*
+	* 校验 name 是否已经注册了 alias
+	* */
 	public boolean hasAlias(String name, String alias) {
 		for (Map.Entry<String, String> entry : this.aliasMap.entrySet()) {
 			String registeredName = entry.getValue();
+			// 假如已注册的 value 跟 name 相等
 			if (registeredName.equals(name)) {
 				String registeredAlias = entry.getKey();
+				// 那么 已注册的 key 和 别名相等或 已注册的key 和 alias 有映射关系都是不对的
 				if (registeredAlias.equals(alias) || hasAlias(registeredAlias, alias)) {
 					return true;
 				}
@@ -198,6 +212,12 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	 * @see #registerAlias
 	 * @see #hasAlias
 	 */
+	/*
+	* 对别名进行循环检测
+	* 比如 name, alias 为 (A, 1)
+	* 假如结合中存在 (B, A), (1, B) 的话那就是循环指向
+	*
+	* */
 	protected void checkForAliasCircle(String name, String alias) {
 		if (hasAlias(alias, name)) {
 			throw new IllegalStateException("Cannot register alias '" + alias +

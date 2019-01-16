@@ -45,6 +45,9 @@ import org.springframework.core.AliasRegistry;
  * @see org.springframework.beans.factory.xml.XmlBeanDefinitionReader
  * @see PropertiesBeanDefinitionReader
  */
+/*
+* 注册 beanName 啥的时候用的 DefaultListableBeanFactory
+* */
 public interface BeanDefinitionRegistry extends AliasRegistry {
 
 	/**
@@ -59,6 +62,9 @@ public interface BeanDefinitionRegistry extends AliasRegistry {
 	 * @see RootBeanDefinition
 	 * @see ChildBeanDefinition
 	 */
+	/*
+	* 注册 BeanName
+	* */
 	void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
 			throws BeanDefinitionStoreException;
 

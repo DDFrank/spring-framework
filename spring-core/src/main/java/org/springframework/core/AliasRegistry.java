@@ -23,6 +23,9 @@ package org.springframework.core;
  * @author Juergen Hoeller
  * @since 2.5.2
  */
+/*
+* 实现类 SimpleAliasRegistry
+* */
 public interface AliasRegistry {
 
 	/**
@@ -32,6 +35,9 @@ public interface AliasRegistry {
 	 * @throws IllegalStateException if the alias is already in use
 	 * and may not be overridden
 	 */
+	/*
+	* 注册一个 beanName 和 alias 的关系
+	* */
 	void registerAlias(String name, String alias);
 
 	/**
