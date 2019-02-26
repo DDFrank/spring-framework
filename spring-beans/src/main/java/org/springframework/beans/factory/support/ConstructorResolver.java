@@ -78,6 +78,9 @@ import org.springframework.util.StringUtils;
  * @see #instantiateUsingFactoryMethod
  * @see AbstractAutowireCapableBeanFactory
  */
+/*
+* 构造方法或者工厂类初始化 bean 的委托类
+* */
 class ConstructorResolver {
 
 	private static final Object[] EMPTY_ARGS = new Object[0];
@@ -372,30 +375,44 @@ class ConstructorResolver {
 	 * method, or {@code null} if none (-> use constructor argument values from bean definition)
 	 * @return a BeanWrapper for the new instance
 	 */
+	/*
+	* 利用工厂方法 完成 bean 的初始化工作
+	*
+	* */
 	public BeanWrapper instantiateUsingFactoryMethod(
 			String beanName, RootBeanDefinition mbd, @Nullable Object[] explicitArgs) {
-
+		// 创建并初始化 BeanWrapperImpl 对象
 		BeanWrapperImpl bw = new BeanWrapperImpl();
 		this.beanFactory.initBeanWrapper(bw);
 
+		// 这里的代码主要是赋值以下属性
+		// 主要是确定工厂对象
 		Object factoryBean;
 		Class<?> factoryClass;
 		boolean isStatic;
 
 		String factoryBeanName = mbd.getFactoryBeanName();
+		// 工厂名不为空的话
 		if (factoryBeanName != null) {
+
 			if (factoryBeanName.equals(beanName)) {
 				throw new BeanDefinitionStoreException(mbd.getResourceDescription(), beanName,
 						"factory-bean reference points back to the same bean definition");
 			}
+			// 获取 工厂的实例
 			factoryBean = this.beanFactory.getBean(factoryBeanName);
+			// 假如该Bean是单例并且已经创建好了那么就抛出异常
 			if (mbd.isSingleton() && this.beanFactory.containsSingleton(beanName)) {
 				throw new ImplicitlyAppearedSingletonException();
 			}
+
 			factoryClass = factoryBean.getClass();
 			isStatic = false;
 		}
 		else {
+			// TODO 为什么为空的话可能是一个静态工厂
+			// 工厂名为空的话可能是一个静态工厂
+			// 静态工厂创建bean，必须要提供工厂的全类名
 			// It's a static factory method on the bean class.
 			if (!mbd.hasBeanClass()) {
 				throw new BeanDefinitionStoreException(mbd.getResourceDescription(), beanName,
@@ -406,44 +423,67 @@ class ConstructorResolver {
 			isStatic = true;
 		}
 
+		// 要确认构造用的参数和方法
+		/*
+		* 构造参数的确认分三种情况
+		* - explicitArgs 参数
+		* - 缓存中获取
+		* - 配置文件中解析
+		* */
 		Method factoryMethodToUse = null;
 		ArgumentsHolder argsHolderToUse = null;
 		Object[] argsToUse = null;
 
+		// 如果指定了构造参数就直接使用, 这里就是第一种情况
 		if (explicitArgs != null) {
 			argsToUse = explicitArgs;
 		}
 		else {
+			// 没有指定构造参数的话就试图从配置文件中解析
 			Object[] argsToResolve = null;
+			// 首先尝试从缓存中获取, 对应第二种情况
 			synchronized (mbd.constructorArgumentLock) {
+				// 获取缓存中的构造函数或者工厂方法
 				factoryMethodToUse = (Method) mbd.resolvedConstructorOrFactoryMethod;
 				if (factoryMethodToUse != null && mbd.constructorArgumentsResolved) {
 					// Found a cached factory method...
+					// 获取缓存中的构造参数
 					argsToUse = mbd.resolvedConstructorArguments;
 					if (argsToUse == null) {
+						// 获取缓存中的构造函数参数的包可见字段
 						argsToResolve = mbd.preparedConstructorArguments;
 					}
 				}
 			}
+			// 缓存中存在，则解析存储在 BeanDefinition 中的参数
+			// 如给定方法的构造函数 A(int, int), 则通过此方法后就会把配置文件中的("1", "1") 转换为 (1, 1)
+			// 缓存中的值可能是原始值也可能是最终值, 所以需要转换构造参数类型保证参数类型完全对应
 			if (argsToResolve != null) {
 				argsToUse = resolvePreparedArguments(beanName, mbd, bw, factoryMethodToUse, argsToResolve, true);
 			}
 		}
 
+		// 确定构造函数
 		if (factoryMethodToUse == null || argsToUse == null) {
 			// Need to determine the factory method...
 			// Try all methods with this name to see if they match the given arguments.
+			// 获取工厂方法的类全名称
 			factoryClass = ClassUtils.getUserClass(factoryClass);
 
+			// 获取全部的候选方法
 			Method[] rawCandidates = getCandidateMethods(factoryClass, mbd);
+			// 检索所有方法，并进行过滤
 			List<Method> candidateList = new ArrayList<>();
 			for (Method candidate : rawCandidates) {
+				// 假如是静态的且方法名等于工厂方法
 				if (Modifier.isStatic(candidate.getModifiers()) == isStatic && mbd.isFactoryMethod(candidate)) {
 					candidateList.add(candidate);
 				}
 			}
 
+			// 假如候选方法只有一个，并且没有参数的话
 			if (candidateList.size() == 1 && explicitArgs == null && !mbd.hasConstructorArgumentValues()) {
+				// 那么这就是唯一的工厂方法了
 				Method uniqueCandidate = candidateList.get(0);
 				if (uniqueCandidate.getParameterCount() == 0) {
 					mbd.factoryMethodToIntrospect = uniqueCandidate;
@@ -452,16 +492,20 @@ class ConstructorResolver {
 						mbd.constructorArgumentsResolved = true;
 						mbd.resolvedConstructorArguments = EMPTY_ARGS;
 					}
+					// 创建bean并返回
 					bw.setBeanInstance(instantiate(beanName, mbd, factoryBean, uniqueCandidate, EMPTY_ARGS));
 					return bw;
 				}
 			}
 
 			Method[] candidates = candidateList.toArray(new Method[0]);
+			// 排序构造函数，public 排在 private 前面, 参数数量降序，排序是为了方便比较
 			AutowireUtils.sortFactoryMethods(candidates);
 
+			// 用于承载解析后的构造函数参数的值
 			ConstructorArgumentValues resolvedValues = null;
 			boolean autowiring = (mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
+			//
 			int minTypeDiffWeight = Integer.MAX_VALUE;
 			Set<Method> ambiguousFactoryMethods = null;
 
@@ -472,39 +516,57 @@ class ConstructorResolver {
 			else {
 				// We don't have arguments passed in programmatically, so we need to resolve the
 				// arguments specified in the constructor arguments held in the bean definition.
+				// 没有参数传递进来的话，需要解析保存在 BeanDefinition 构造函数中指定的参数, 这是构造参数的第三种情况
+				// 也就是从配置文件中获取（此时配置文件的信息已经全部变成了 BeanDefinition 实例对象中了）
 				if (mbd.hasConstructorArgumentValues()) {
+					// 构造函数的参数
 					ConstructorArgumentValues cargs = mbd.getConstructorArgumentValues();
 					resolvedValues = new ConstructorArgumentValues();
+					// 解析构造函数的参数
+					// 将该 bean 的构造函数参数解析为 resolvedValues 对象，其中会涉及到其他 bean
 					minNrOfArgs = resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues);
 				}
 				else {
+					// 没有构造参数的话那就为0了
 					minNrOfArgs = 0;
 				}
 			}
 
+
 			LinkedList<UnsatisfiedDependencyException> causes = null;
 
+			// 遍历 候选方法的数组, 只有一个的场景已经在上面讨论过了, 开始确定构造方法
 			for (Method candidate : candidates) {
+				// 方法体的参数
 				Class<?>[] paramTypes = candidate.getParameterTypes();
 
+				// 假如该方法的参数不小于构造方法的的参数
 				if (paramTypes.length >= minNrOfArgs) {
+					// 保存参数的对象
 					ArgumentsHolder argsHolder;
 
+					// 假如传递了参数，并且参数的数量不匹配的话，就放弃该方法
 					if (explicitArgs != null) {
 						// Explicit arguments given -> arguments length must match exactly.
 						if (paramTypes.length != explicitArgs.length) {
 							continue;
 						}
+						// 根据参数创建参数持有者 ArgumentsHolder 对象
 						argsHolder = new ArgumentsHolder(explicitArgs);
 					}
+					// 该方法的参数小于构造方法的参数时
 					else {
 						// Resolved constructor arguments: type conversion and/or autowiring necessary.
+						// 为提供参数，解析构造参数
 						try {
 							String[] paramNames = null;
+							// 获取参数名称探测器
 							ParameterNameDiscoverer pnd = this.beanFactory.getParameterNameDiscoverer();
+							// 获取指定构造函数的参数名称
 							if (pnd != null) {
 								paramNames = pnd.getParameterNames(candidate);
 							}
+							// 在已经解析的构造函数参数值的情况下，创建一个参数持有者 ArgumentsHolder 对象
 							argsHolder = createArgumentArray(beanName, mbd, resolvedValues, bw,
 									paramTypes, paramNames, candidate, autowiring, candidates.length == 1);
 						}
@@ -516,14 +578,22 @@ class ConstructorResolver {
 							if (causes == null) {
 								causes = new LinkedList<>();
 							}
+							// 发生异常时，记录异常并继续执行
 							causes.add(ex);
 							continue;
 						}
 					}
-
+					/*
+					* isLenientConstructorResolution 判断解析构造函数的时候是否以宽松模式还是严格模式
+					* 严格模式: 解析构造函数时，必须所有的都需要匹配，否则抛出异常
+					* 宽松模式: 使用具有"最接近的模式"进行匹配
+					* TypeDifferenceWeight: 类型差异权重
+					* */
 					int typeDiffWeight = (mbd.isLenientConstructorResolution() ?
 							argsHolder.getTypeDifferenceWeight(paramTypes) : argsHolder.getAssignabilityWeight(paramTypes));
 					// Choose this factory method if it represents the closest match.
+					// minTypeDiffWeight 在上文中被赋值了最大值，所以这里基本是必然成立的
+					// 应该是宽松模式，然后就给这些变量赋值
 					if (typeDiffWeight < minTypeDiffWeight) {
 						factoryMethodToUse = candidate;
 						argsHolderToUse = argsHolder;
@@ -536,10 +606,15 @@ class ConstructorResolver {
 					// and eventually raise an ambiguity exception.
 					// However, only perform that check in non-lenient constructor resolution mode,
 					// and explicitly ignore overridden methods (with the same parameter signature).
+					/*
+					* 如果具有相同参数数量的方法具有相同的类型差异权重，则收集此类型选项
+					* 但是，仅在非宽松构造函数解析模式下执行该坚持，并显式忽略重写方法(具有相同的参数签名)
+					* */
 					else if (factoryMethodToUse != null && typeDiffWeight == minTypeDiffWeight &&
 							!mbd.isLenientConstructorResolution() &&
 							paramTypes.length == factoryMethodToUse.getParameterCount() &&
 							!Arrays.equals(paramTypes, factoryMethodToUse.getParameterTypes())) {
+						// 查到多个可匹配的方法
 						if (ambiguousFactoryMethods == null) {
 							ambiguousFactoryMethods = new LinkedHashSet<>();
 							ambiguousFactoryMethods.add(factoryMethodToUse);
@@ -549,6 +624,8 @@ class ConstructorResolver {
 				}
 			}
 
+			// 没有可执行的工厂方法时，抛出异常
+			// 下面的这一堆应该是分析原因
 			if (factoryMethodToUse == null) {
 				if (causes != null) {
 					UnsatisfiedDependencyException ex = causes.removeLast();
@@ -597,15 +674,20 @@ class ConstructorResolver {
 			}
 
 			if (explicitArgs == null && argsHolderToUse != null) {
+				// 将解析的构造函数加入缓存
 				mbd.factoryMethodToIntrospect = factoryMethodToUse;
 				argsHolderToUse.storeCache(mbd, factoryMethodToUse);
 			}
 		}
 
+		// 创建 Bean 对象，并设置到 bw 中
 		bw.setBeanInstance(instantiate(beanName, mbd, factoryBean, factoryMethodToUse, argsToUse));
 		return bw;
 	}
 
+	/*
+	* 创建 Bean的方法
+	* */
 	private Object instantiate(
 			String beanName, RootBeanDefinition mbd, Object factoryBean, Method factoryMethod, Object[] args) {
 
@@ -937,6 +1019,7 @@ class ConstructorResolver {
 			return Integer.MAX_VALUE - 1024;
 		}
 
+		// 将构造函数，构造参数保存到缓存中
 		public void storeCache(RootBeanDefinition mbd, Executable constructorOrFactoryMethod) {
 			synchronized (mbd.constructorArgumentLock) {
 				mbd.resolvedConstructorOrFactoryMethod = constructorOrFactoryMethod;

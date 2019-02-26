@@ -155,6 +155,9 @@ public abstract class ClassUtils {
 	/**
 	 * Register the given common classes with the ClassUtils cache.
 	 */
+	/*
+	* 比如各种类型的数组呀，集合类呀什么的
+	* */
 	private static void registerCommonClasses(Class<?>... commonClasses) {
 		for (Class<?> clazz : commonClasses) {
 			commonClassCache.put(clazz.getName(), clazz);
@@ -233,23 +236,30 @@ public abstract class ClassUtils {
 	 * @throws LinkageError if the class file could not be loaded
 	 * @see Class#forName(String, boolean, ClassLoader)
 	 */
+	/*
+	* 通过 name 的表达式来 创建 Class, 比原生的 Class.forName() 更为泛用
+	* */
 	public static Class<?> forName(String name, @Nullable ClassLoader classLoader)
 			throws ClassNotFoundException, LinkageError {
 
 		Assert.notNull(name, "Name must not be null");
-
+		// 检查是否是基本类型的class
 		Class<?> clazz = resolvePrimitiveClassName(name);
 		if (clazz == null) {
+			// 如果不是基本类型的话
 			clazz = commonClassCache.get(name);
 		}
 		if (clazz != null) {
 			return clazz;
 		}
 
+		// 下面是各种数组类型的class 的返回
 		// "java.lang.String[]" style arrays
+		// 假如是 [] 结尾的
 		if (name.endsWith(ARRAY_SUFFIX)) {
 			String elementClassName = name.substring(0, name.length() - ARRAY_SUFFIX.length());
 			Class<?> elementClass = forName(elementClassName, classLoader);
+			// 返回数组的实例
 			return Array.newInstance(elementClass, 0).getClass();
 		}
 
@@ -268,10 +278,12 @@ public abstract class ClassUtils {
 		}
 
 		ClassLoader clToUse = classLoader;
+		// classLoader 为 null 的话再去获取一个
 		if (clToUse == null) {
 			clToUse = getDefaultClassLoader();
 		}
 		try {
+			// 返回 Class
 			return Class.forName(name, false, clToUse);
 		}
 		catch (ClassNotFoundException ex) {
@@ -453,6 +465,7 @@ public abstract class ClassUtils {
 		Class<?> result = null;
 		// Most class names will be quite long, considering that they
 		// SHOULD sit in a package, so a length check is worthwhile.
+		// 一般来说基本类型的 string的长度都会比较小，所以这里做一个 check
 		if (name != null && name.length() <= 8) {
 			// Could be a primitive - likely.
 			result = primitiveTypeNameMap.get(name);

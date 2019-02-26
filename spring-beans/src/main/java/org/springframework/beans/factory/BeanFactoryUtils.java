@@ -57,6 +57,9 @@ public abstract class BeanFactoryUtils {
 	 * @since 5.1
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
 	 */
+	/*
+	* 缓存 factoryBean 和 beanName 的集合
+	* */
 	private static final Map<String, String> transformedBeanNameCache = new ConcurrentHashMap<>();
 
 
@@ -78,12 +81,18 @@ public abstract class BeanFactoryUtils {
 	 * @return the transformed name
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
 	 */
+	/*
+	* 反正真正的 bean 的名字，有可能是 alias 或者 FactoryBean
+	* */
 	public static String transformedBeanName(String name) {
 		Assert.notNull(name, "'name' must not be null");
+		// 假如不是 FACTORY_BEAN_PREFIX 开头，就说明不是 factoryName,就直接返回
 		if (!name.startsWith(BeanFactory.FACTORY_BEAN_PREFIX)) {
 			return name;
 		}
+
 		return transformedBeanNameCache.computeIfAbsent(name, beanName -> {
+			// 重复剥离 FACTORY_BEAN_PREFIX 前缀，并将该 FactoryName 和 beanName
 			do {
 				beanName = beanName.substring(BeanFactory.FACTORY_BEAN_PREFIX.length());
 			}

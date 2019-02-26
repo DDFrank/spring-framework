@@ -42,7 +42,9 @@ import org.springframework.util.StringUtils;
  * @since 1.1
  */
 public class SimpleInstantiationStrategy implements InstantiationStrategy {
-
+	/*
+	* 正在创建 Bean 的 Method 对象
+	* */
 	private static final ThreadLocal<Method> currentlyInvokedFactoryMethod = new ThreadLocal<>();
 
 
@@ -133,12 +135,16 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 		throw new UnsupportedOperationException("Method Injection not supported in SimpleInstantiationStrategy");
 	}
 
+	/*
+	* 确定了工厂对象，构造函数，构造参数后，会调用该方法创建 Bean
+	* */
 	@Override
 	public Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner,
 			@Nullable Object factoryBean, final Method factoryMethod, Object... args) {
 
 		try {
 			if (System.getSecurityManager() != null) {
+				// 设置 Method 可访问
 				AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
 					ReflectionUtils.makeAccessible(factoryMethod);
 					return null;
@@ -147,10 +153,11 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 			else {
 				ReflectionUtils.makeAccessible(factoryMethod);
 			}
-
+			// 获取原 Method 对象
 			Method priorInvokedFactoryMethod = currentlyInvokedFactoryMethod.get();
 			try {
 				currentlyInvokedFactoryMethod.set(factoryMethod);
+				// 核心就是在这里，利用 Method 创建 Bean
 				Object result = factoryMethod.invoke(factoryBean, args);
 				if (result == null) {
 					result = new NullBean();

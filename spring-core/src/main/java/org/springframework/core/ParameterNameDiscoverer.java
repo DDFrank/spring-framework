@@ -33,6 +33,9 @@ import org.springframework.lang.Nullable;
  * @author Adrian Colyer
  * @since 2.0
  */
+/*
+* 用于解析方法和构造函数的参数名称的接口, 简称参数名称探测器
+* */
 public interface ParameterNameDiscoverer {
 
 	/**

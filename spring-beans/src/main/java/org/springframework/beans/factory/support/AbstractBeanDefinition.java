@@ -1073,11 +1073,16 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 * Checks for existence of a method with the specified name.
 	 * @throws BeanDefinitionValidationException in case of validation failure
 	 */
+	/*
+	* 检查 init-method 和 replace-method
+	* */
 	public void prepareMethodOverrides() throws BeanDefinitionValidationException {
 		// Check that lookup methods exists.
 		if (hasMethodOverrides()) {
+			// 取出所有的 methods
 			Set<MethodOverride> overrides = getMethodOverrides().getOverrides();
 			synchronized (overrides) {
+				// 遍历调用
 				for (MethodOverride mo : overrides) {
 					prepareMethodOverride(mo);
 				}
@@ -1093,12 +1098,15 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 * @throws BeanDefinitionValidationException in case of validation failure
 	 */
 	protected void prepareMethodOverride(MethodOverride mo) throws BeanDefinitionValidationException {
+		// 从 beanClass 中取出该方法名的方法的个数
 		int count = ClassUtils.getMethodCountForName(getBeanClass(), mo.getMethodName());
+		// 没有的话抛出异常
 		if (count == 0) {
 			throw new BeanDefinitionValidationException(
 					"Invalid method override: no method with name '" + mo.getMethodName() +
 					"' on class [" + getBeanClassName() + "]");
 		}
+		// = 1 说明没有重载
 		else if (count == 1) {
 			// Mark override as not overloaded, to avoid the overhead of arg type checking.
 			mo.setOverloaded(false);
