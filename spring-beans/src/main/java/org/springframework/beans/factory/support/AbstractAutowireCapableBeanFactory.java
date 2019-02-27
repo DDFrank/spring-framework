@@ -1201,6 +1201,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (resolved) {
 			// autowire 自动注入,调用构造函数自动注入
 			if (autowireNecessary) {
+				// 简单理解为带有参数的构造方法，来初始化 Bean对象
 				return autowireConstructor(beanName, mbd, null, null);
 			}
 			else {
@@ -1381,6 +1382,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * or {@code null} if none (-> use constructor argument values from bean definition)
 	 * @return a BeanWrapper for the new instance
 	 */
+	/*
+	* 带有参数的构造方法，初始化 bean 对象
+	* */
 	protected BeanWrapper autowireConstructor(
 			String beanName, RootBeanDefinition mbd, @Nullable Constructor<?>[] ctors, @Nullable Object[] explicitArgs) {
 
