@@ -254,6 +254,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		// Eagerly check singleton cache for manually registered singletons.
 		Object sharedInstance = getSingleton(beanName);
 		// 有 args 说明不是从缓存中取而是需要重新建一个对象
+		// 这部分代码主要是处理循环依赖的
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
 				if (isSingletonCurrentlyInCreation(beanName)) {
@@ -309,6 +310,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			// 假如不是仅需要做类型检查
 			if (!typeCheckOnly) {
 				// 如果不是仅做类型检查，而是需要创建 Bean 对象，就需要调用该方法进行记录,将 bean 标记为已创建的
+				// 标记该bean为已创建的，有助于解决循环依赖
 				markBeanAsCreated(beanName);
 			}
 
